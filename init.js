@@ -18,7 +18,7 @@ const client = new Client(DB_URL);
 
 const connectToDb = async () => {
 	client.connect();
-	console.log('connected to db');
+	console.log('🎆 Connected to DB.');
 };
 
 const checkIfMigrationTableExists = async () => {
@@ -32,16 +32,17 @@ const checkIfMigrationTableExists = async () => {
 	const {exists} = response.rows[0];
 
 	if(!exists) {
-		console.log('no migration table found, creating...');
+		console.log('🔧 No migration table found, creating...');
 		await client.query(`CREATE TABLE caravel_migrations (version integer PRIMARY KEY);`);
-		console.log('created migrations table');
+		console.log('👌 Migrations table created');
 		return;
 	}
-	else console.log('migration table exists');
+	else console.log('👌 Migration table exists');
 };
 
 //get all files
 const getAllMigrationsFromFolder = async () => {
+	console.log('📄 Getting all migrations from folder...');
 	const migrationFolder = fs.readdirSync(`./${MIGRATION_FOLDER_NAME}`);
 
 	let result = await migrationFolder.map(async oneFileName => {
@@ -53,7 +54,6 @@ const getAllMigrationsFromFolder = async () => {
 		const fileContent = await fs.readFileSync(pathName, "utf8", (err, data) => {
 			return data;
 		})
-
 		return {
 			version: Number(versionNumber),
 			sql: fileContent
@@ -65,8 +65,8 @@ const getAllMigrationsFromFolder = async () => {
 };
 
 const getAllMigrationsFromTable = async () => {
+	console.log('📈 Getting all migrations in table...');
 	const response = await client.query(`SELECT * FROM caravel_migrations`);
-	console.log('all migrations in table', response.rows);
 	return response.rows;
 };
 
@@ -88,7 +88,7 @@ const updateMigrationTable = async (newVersion) => {
 
 const executeMigrations = async (migrationsToExecute) => {
 	if (migrationsToExecute.length === 0) {
-		console.log('DB up to date!');
+		console.log('🙌 Database is up to date!');
 		return;
 	} else {
 		const [ firstMigration, ...next ] = migrationsToExecute;
@@ -96,7 +96,7 @@ const executeMigrations = async (migrationsToExecute) => {
 			await doStuffToMigrateThings(firstMigration);
 			await executeMigrations(next);
 		} catch (error) {
-			console.log('ERROR with migration, version: ', firstMigration.version);
+			console.log('🚫 ERROR with migration, version: ', firstMigration.version);
 			console.error(error);
 		};
 	};
@@ -104,7 +104,7 @@ const executeMigrations = async (migrationsToExecute) => {
 
 const doStuffToMigrateThings = async (migration) => {
 	await client.query(migration.sql);
-	console.log('SUCCESS with migration, version: ', migration.version);
+	console.log('🚀 SUCCESS with migration, version: ', migration.version);
 	await updateMigrationTable(migration.version);
 }
 
@@ -112,7 +112,7 @@ const init = async () => {
 	// await(promptShell('DB_URL'));
 	const dotEnvOk = await dotEnvIsFormatted();
 	if(!dotEnvOk) {
-		console.log('Please set up your .env file with keys: \n DB_URL, \n MIGRATION_TABLE_NAME, \n MIGRATION_FOLDER_NAME');
+		console.log('🚫 Please set up your .env file with keys: \n DB_URL, \n MIGRATION_TABLE_NAME, \n MIGRATION_FOLDER_NAME');
 	}
 	else {
 		await connectToDb();
@@ -122,8 +122,8 @@ const init = async () => {
 		const migrationsToExecute = await compareMigrations(table, folder);
 		await executeMigrations(migrationsToExecute);
 
-		console.log('migrations finished successfully !');
-	}
+		console.log('🤝 Migrations finished successfully !');
+	};
 	return;
 };
 
