@@ -21,18 +21,23 @@ const connectToDb = async () => {
 	console.log('connected to db');
 };
 
-const checkIfMigrationTableExists = () => {
+const checkIfMigrationTableExists = async () => {
+	const response = await client.query(`SELECT EXISTS 
+		(
+			SELECT 1
+			FROM information_schema.tables 
+			WHERE table_schema = 'public'
+			AND table_name = 'caravel_migrations'
+		);`);
+	const {exists} = response.rows[0];
 
-	//pas beau
-	client.query(`SELECT * FROM caravel_migrations`)
-		.then(res => {
-			console.log('migration table exists');
-		})
-		.catch(async err => {
-			console.log('no migration table found, creating...');
-			await client.query(`CREATE TABLE caravel_migrations (version integer PRIMARY KEY);`);
-			console.log('created migrations table');
-		})
+	if(!exists) {
+		console.log('no migration table found, creating...');
+		await client.query(`CREATE TABLE caravel_migrations (version integer PRIMARY KEY);`);
+		console.log('created migrations table');
+		return;
+	}
+	else console.log('migration table exists');
 };
 
 //get all files
