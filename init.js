@@ -1,77 +1,28 @@
+require('dotenv').config();
 const {Client} = require('pg');
 const {exec} = require('child_process');
 const fs = require("fs");
 
-let dbUrl = 'postgres://jn:test@localhost:5432/kernelpanic';
-let migrationTableName = 'migrations';
-let migrationFolderName = 'migrations';
+//extract from .env
+const {DB_URL, MIGRATION_TABLE_NAME, MIGRATION_FOLDER_NAME} = process.env;
 
-//connect to db
-const client = new Client(dbUrl);
+//create client
+const client = new Client(DB_URL);
 
-if (!dbUrl) {
-	dbUrl = window.prompt('please enter the db url');
-}
-
-if (!migrationTableName) {
-	migrationTableName = window.prompt('please enter migration table name');	
-}
-
-if (!migrationFolderName) {
-	migrationFolderName = window.prompt('please enter migration folder name');	
-}
 
 const connectToDb = async () => {
 	client.connect();
 	console.log('connected to db');
 };
 
-const promptShell = async (asked) => {
-	return new Promise( async (resolve, reject) => {
-
-		let cmd;
-
-		switch (asked) {
-			case 'dbUrl': {
-				console.log('asked for db url');
-				cmd = 'PS1="database URL: "';
-				break;
-			};
-			case 'migrationFolderName': {
-				cmd = 'PS1="migration folder name: "';
-				break;
-			};
-			case 'migrationTableName': {
-				cmd = 'PS1="migration table name: "';
-				break;
-			};
-			default: return;
-		};
-
-		console.log(cmd);
-
-		await exec(cmd, (err, stdout, stderr) => {
-			if(err) {
-				console.log('error prompt');
-				reject(err);
-			} else {
-				console.log('prompt resolve');
-				resolve({stdout, stderr});
-			}
-		})
-	});
-};
-
-//check if migration table
-
 const checkIfMigrationTableExists = () => {
 
-	client.query(`SELECT * FROM ${migrationTableName}`)
+	client.query(`SELECT * FROM ${MIGRATION_TABLE_NAME}`)
 		.then(res => {
 			console.log('migration table exists');
 		})
 		.catch(async err => {
-			await client.query(`CREATE TABLE ${migrationTableName} (version integer PRIMARY KEY)`);
+			await client.query(`CREATE TABLE ${MIGRATION_TABLE_NAME} (version integer PRIMARY KEY)`);
 			console.log('created migrations table');
 		})
 };
@@ -80,7 +31,7 @@ const getAllMigrationsFromFolder = async () => {
 
 	let migrationFilesArray = []
 	//get all files
-	const migrationFolder = fs.readdirSync(`./${migrationFolderName}`);
+	const migrationFolder = fs.readdirSync(`./${MIGRATION_FOLDER_NAME}`);
 
 	await migrationFolder.forEach(async oneFileName => {
 
@@ -89,7 +40,7 @@ const getAllMigrationsFromFolder = async () => {
 
 		// console.log(versionNumber);
 
-		const pathName = `./${migrationFolderName}/${oneFileName}`;
+		const pathName = `./${MIGRATION_FOLDER_NAME}/${oneFileName}`;
 		// console.log(pathName);
 
 		const fileContent = await fs.readFileSync(pathName, "utf8", (err, data) => {
@@ -110,13 +61,13 @@ const getAllMigrationsFromFolder = async () => {
 
 const getAllMigrationsFromTable = async () => {
 	await checkIfMigrationTableExists();
-	const response = await client.query(`SELECT * FROM ${migrationTableName}`);
+	const response = await client.query(`SELECT * FROM ${MIGRATION_TABLE_NAME}`);
 	console.log('all migrations in table', response.rows);
 	return response.rows;
 };
 
 const updateMigrationTable = async (newVersion) => {
-	await client.query(`INSERT INTO ${migrationTableName} (version) VALUES($1)`, [newVersion]);
+	await client.query(`INSERT INTO ${MIGRATION_TABLE_NAME} (version) VALUES($1)`, [newVersion]);
 }
 
 const compareMigrations = async () => {
@@ -150,7 +101,6 @@ const joinMigrations = async () => {
 
 const executeMigrations = async () => {
 	const toExecuteString = await joinMigrations();
-	console.log('execute string', toExecuteString);
 	if (toExecuteString) {
 		console.log('applying migrations');
 		await client.query(toExecuteString);
@@ -160,7 +110,7 @@ const executeMigrations = async () => {
 };
 
 const init = async () => {
-	// await(promptShell('dbUrl'));
+	// await(promptShell('DB_URL'));
 	await connectToDb();
 	await executeMigrations();
 	console.log('migrations updated !');
