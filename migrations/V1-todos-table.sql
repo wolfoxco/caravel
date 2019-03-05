@@ -1,0 +1,1 @@
+CREATE TABLE todos (id uuid, author uuid, title varchar, content varchar);
