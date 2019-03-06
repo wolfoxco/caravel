@@ -34,8 +34,7 @@ const checkIfMigrationTableExists = async () => {
 		SELECT EXISTS (
 			SELECT 1
 			FROM information_schema.tables
-			WHERE table_schema = 'public'
-			AND table_name = 'caravel_migrations'
+			WHERE table_name = 'caravel_migrations'
 		)`
 	)
 	const { exists } = response.rows[0]
