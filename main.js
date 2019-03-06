@@ -134,7 +134,6 @@ const init = async () => {
 			console.error(`Unable to connect to your database. Are you sure it is up and running? It tries to connect to ${DATABASE_URL}`)
 		}
 	}
-	return
 }
 
 init()
