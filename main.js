@@ -19,8 +19,14 @@ const dotEnvIsFormatted = () => (
 )
 
 const connectToDb = async () => {
-	client.connect()
-	console.log('🎆 Connected to DB.')
+	try {
+		await client.connect()
+		console.log('🎆  Connected to DB.')
+		return true
+	} catch (error) {
+		console.error(error)
+		return false
+	}
 }
 
 const checkIfMigrationTableExists = async () => {
@@ -116,14 +122,17 @@ const init = async () => {
 	if (!dotEnvOk) {
 		console.log('🚫 Please set up your .env file with keys: \n DATABASE_URL, \n MIGRATION_TABLE_NAME, \n MIGRATION_FOLDER_NAME')
 	} else {
-		await connectToDb()
-		await checkIfMigrationTableExists()
-		const table = await getAllMigrationsFromTable()
-		const folder = await getAllMigrationsFromFolder()
-		const migrationsToExecute = await compareMigrations(table, folder)
-		await executeMigrations(migrationsToExecute)
-
-		console.log('🤝 Migrations finished successfully !')
+		const connected = await connectToDb()
+		if (connected) {
+			await checkIfMigrationTableExists()
+			const table = await getAllMigrationsFromTable()
+			const folder = await getAllMigrationsFromFolder()
+			const migrationsToExecute = await compareMigrations(table, folder)
+			await executeMigrations(migrationsToExecute)
+			console.log('🤝 Migrations finished successfully !')
+		} else {
+			console.error(`Unable to connect to your database. Are you sure it is up and running? It tries to connect to ${DATABASE_URL}`)
+		}
 	}
 	return
 }
