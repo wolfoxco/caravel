@@ -6,16 +6,17 @@ const { Client } = require('pg')
 
 const MIGRATION_TABLE_NAME = 'caravel_migrations'
 
-const dotEnvIsFormatted = () => {
-	if (DB_URL !== undefined && MIGRATION_TABLE_NAME !== undefined && MIGRATION_FOLDER_NAME !== undefined) {
-		return true
-	} else {
-		return false
-	}
-}
+// Extract from .env
+const { DATABASE_URL, MIGRATION_FOLDER_NAME } = process.env
 
-//create client
-const client = new Client(DB_URL)
+const client = DATABASE_URL ? new Client(DATABASE_URL) : null
+
+// if (DATABASE_URL === undefined)
+const dotEnvIsFormatted = () => (
+	DATABASE_URL &&
+	MIGRATION_TABLE_NAME &&
+	MIGRATION_FOLDER_NAME
+)
 
 const connectToDb = async () => {
 	client.connect()
@@ -113,7 +114,7 @@ const doStuffToMigrateThings = async (migration) => {
 const init = async () => {
 	const dotEnvOk = await dotEnvIsFormatted()
 	if (!dotEnvOk) {
-		console.log('🚫 Please set up your .env file with keys: \n DB_URL, \n MIGRATION_TABLE_NAME, \n MIGRATION_FOLDER_NAME')
+		console.log('🚫 Please set up your .env file with keys: \n DATABASE_URL, \n MIGRATION_TABLE_NAME, \n MIGRATION_FOLDER_NAME')
 	} else {
 		await connectToDb()
 		await checkIfMigrationTableExists()
