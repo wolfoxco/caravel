@@ -4,6 +4,7 @@ require('dotenv').config()
 const fs = require('fs')
 const path = require('path')
 const { Client } = require('pg')
+const { promisify } = require('util')
 
 const MIGRATION_TABLE_NAME = 'caravel_migrations'
 
