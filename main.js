@@ -30,20 +30,20 @@ const connectToDb = async () => {
 }
 
 const checkIfMigrationTableExists = async () => {
-	const response = await client.query(`SELECT EXISTS
-		(
+	const response = await client.query(`
+		SELECT EXISTS (
 			SELECT 1
 			FROM information_schema.tables
 			WHERE table_schema = 'public'
 			AND table_name = 'caravel_migrations'
-		)`)
+		)`
+	)
 	const { exists } = response.rows[0]
 
 	if (!exists) {
 		console.log('🔧 No migration table found, creating...')
 		await client.query(`CREATE TABLE caravel_migrations (version integer PRIMARY KEY)`)
 		console.log('👌 Migrations table created')
-		return
 	} else {
 		console.log('👌 Migration table exists')
 	}
