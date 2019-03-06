@@ -77,15 +77,11 @@ const getAllMigrationsFromTable = async () => {
 	return response.rows
 }
 
-const compareMigrations = async (table, folder) => {
-
-	const tableVersions = table.map(oneRow => {
-		return oneRow.version
-	})
-
-	let migrationsToExecute = folder.filter(oneMigration => {
-		return (!tableVersions.includes(oneMigration.version))
-	})
+const compareMigrations = async (migrationsRowsFromDB, migrationsFromFS) => {
+	const tableVersions = migrationsRowsFromDB.map(oneRow => oneRow.version)
+	const migrationsToExecute = migrationsFromFS.filter(oneMigration =>
+		!tableVersions.includes(oneMigration.version)
+	)
 	return migrationsToExecute
 }
 
