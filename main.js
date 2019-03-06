@@ -2,6 +2,7 @@
 require('dotenv').config()
 
 const fs = require('fs')
+const path = require('path')
 const { Client } = require('pg')
 
 const MIGRATION_TABLE_NAME = 'caravel_migrations'
@@ -50,28 +51,24 @@ const checkIfMigrationTableExists = async () => {
 	}
 }
 
-//get all files
+const readMigrationFileContent = async oneFileName => {
+	const [ versionNumber ] = oneFileName.split('-')
+	const pathName = path.resolve(MIGRATION_FOLDER_NAME, oneFileName)
+	const fileContent = await promisify(fs.readFile)(pathName, "utf8")
+	return {
+		version: parseInt(versionNumber),
+		sql: fileContent,
+	}
+}
+
+/** Get all migrations from folder migration.
+ * @return migrations files into an array
+ */
 const getAllMigrationsFromFolder = async () => {
 	console.log('📄 Getting all migrations from folder...')
-	const migrationFolder = fs.readdirSync(`./${MIGRATION_FOLDER_NAME}`)
-
-	let result = await migrationFolder.map(async oneFileName => {
-
-		const fileNameSpliced = oneFileName.split('-')
-		const versionNumber = fileNameSpliced[0]
-		const pathName = `./${MIGRATION_FOLDER_NAME}/${oneFileName}`
-
-		const fileContent = await fs.readFileSync(pathName, "utf8", (err, data) => {
-			return data
-		})
-		return {
-			version: Number(versionNumber),
-			sql: fileContent
-		}
-	})
-
-	const migrationFilesArray = await Promise.all(result)
-	return migrationFilesArray
+	const migrationFolder = await promisify(fs.readDirSync)(path.resolve(MIGRATION_FOLDER_NAME))
+	const migrationFiles = migrationFolder.map(readMigrationFileContent)
+	return Promise.all(migrationFiles)
 }
 
 const getAllMigrationsFromTable = async () => {
