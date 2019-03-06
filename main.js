@@ -93,23 +93,17 @@ const updateMigrationTable = (newVersion) => {
 	)
 }
 
-const executeMigrations = async (migrationsToExecute) => {
+const stageMigrations = async (migrationsToExecute) => {
 	if (migrationsToExecute.length === 0) {
 		console.log('🙌 Database is up to date!')
-		return
 	} else {
-		const [ firstMigration, ...next ] = migrationsToExecute
-		try {
-			await doStuffToMigrateThings(firstMigration)
-			await executeMigrations(next)
-		} catch (error) {
-			console.log('🚫 ERROR with migration, version: ', firstMigration.version)
-			console.error(error)
-		}
+		const [ currentMigration, ...nextMigrations ] = migrationsToExecute
+		await executeMigrations(currentMigration)
+		await stageMigrations(nextMigrations)
 	}
 }
 
-const doStuffToMigrateThings = async (migration) => {
+const executeMigrations = async (migration) => {
 	await client.query(migration.sql)
 	console.log('🚀 SUCCESS with migration, version: ', migration.version)
 	await updateMigrationTable(migration.version)
@@ -123,11 +117,22 @@ const init = async () => {
 		const connected = await connectToDb()
 		if (connected) {
 			await checkIfMigrationTableExists()
-			const table = await getAllMigrationsFromTable()
-			const folder = await getAllMigrationsFromFolder()
-			const migrationsToExecute = await compareMigrations(table, folder)
-			await executeMigrations(migrationsToExecute)
-			console.log('🤝 Migrations finished successfully !')
+			const migrationsRowsFromDB = await getAllMigrationsFromTable()
+			const migrationsFromFS = await getAllMigrationsFromFolder()
+			const migrationsToExecute = await compareMigrations(
+				migrationsRowsFromDB,
+				migrationsFromFS,
+			)
+			try {
+				await stageMigrations(migrationsToExecute)
+				console.log('🤝 Migrations finished successfully !')
+			} catch (error) {
+				console.error(
+					'🚫 ERROR with migration, version: ',
+					currentMigration.version,
+				)
+				console.error(error)
+			}
 		} else {
 			console.error(`Unable to connect to your database. Are you sure it is up and running? It tries to connect to ${DATABASE_URL}`)
 		}
