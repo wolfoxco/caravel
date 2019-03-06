@@ -1,7 +1,7 @@
 // Read .env
 require('dotenv').config()
 
-const fs = require("fs")
+const fs = require('fs')
 const { Client } = require('pg')
 
 const MIGRATION_TABLE_NAME = 'caravel_migrations'
@@ -42,7 +42,9 @@ const checkIfMigrationTableExists = async () => {
 
 	if (!exists) {
 		console.log('🔧 No migration table found, creating...')
-		await client.query(`CREATE TABLE caravel_migrations (version integer PRIMARY KEY)`)
+		await client.query(
+			`CREATE TABLE caravel_migrations (version integer PRIMARY KEY)`
+		)
 		console.log('👌 Migrations table created')
 	} else {
 		console.log('👌 Migration table exists')
@@ -91,8 +93,11 @@ const compareMigrations = async (table, folder) => {
 	return migrationsToExecute
 }
 
-const updateMigrationTable = async (newVersion) => {
-	await client.query(`INSERT INTO caravel_migrations (version) VALUES($1)`, [newVersion])
+const updateMigrationTable = (newVersion) => {
+	return client.query(
+		`INSERT INTO caravel_migrations (version) VALUES($1)`,
+		[ newVersion ]
+	)
 }
 
 const executeMigrations = async (migrationsToExecute) => {
