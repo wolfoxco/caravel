@@ -1,10 +1,8 @@
+// Read .env
 require('dotenv').config()
-const { Client } = require('pg')
-const { exec } = require('child_process')
-const fs = require("fs")
 
-//extract from .env
-const { DB_URL, MIGRATION_FOLDER_NAME } = process.env
+const fs = require("fs")
+const { Client } = require('pg')
 
 const MIGRATION_TABLE_NAME = 'caravel_migrations'
 
