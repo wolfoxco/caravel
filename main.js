@@ -109,10 +109,15 @@ const executeMigrations = async (migration) => {
 	await updateMigrationTable(migration.version)
 }
 
-const init = async () => {
+const runMigrations = async () => {
 	const dotEnvOk = await dotEnvIsFormatted()
 	if (!dotEnvOk) {
-		console.log('🚫 Please set up your .env file with keys: \n DATABASE_URL, \n MIGRATION_TABLE_NAME, \n MIGRATION_FOLDER_NAME')
+		console.error([
+			'🚫 Please set up your .env file with keys:',
+			'DATABASE_URL,',
+			'MIGRATION_TABLE_NAME,',
+			'MIGRATION_FOLDER_NAME',
+		].join('\n'))
 	} else {
 		const connected = await connectToDb()
 		if (connected) {
@@ -134,10 +139,14 @@ const init = async () => {
 				console.error(error)
 			}
 		} else {
-			console.error(`Unable to connect to your database. Are you sure it is up and running? It tries to connect to ${DATABASE_URL}`)
+			console.error([
+				'Unable to connect to your database.',
+				'Are you sure it is up and running?',
+				'It tries to connect to',
+				DATABASE_URL,
+			].join(' '))
 		}
 	}
 }
 
-init()
-module.exports = init
+module.exports = { runMigrations }
