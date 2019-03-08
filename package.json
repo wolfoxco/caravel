@@ -1,9 +1,21 @@
 {
   "name": "@wolfox/caravel",
-  "version": "1.0.0",
-  "main": "./main.js",
+  "version": "0.0.0",
+  "main": "main.js",
+  "description": "Smart, simple and efficient way to manage PostgreSQL migration files.",
   "repository": "git@github.com:wolfoxco/caravel.git",
+  "homepage": "https://github.com/wofoxco/caravel",
   "license": "MIT",
+  "contributors": [
+    "Mehdi Louraoui <med.louraoui@gmail.com>",
+    "Jean-Nicolas Veigel <pro.jnveigel@gmail.com>"
+  ],
+  "keywords": [
+    "postgresql",
+    "database",
+    "migrations",
+    "sql"
+  ],
   "bin": {
     "caravel": "bin/index.js"
   },
@@ -12,7 +24,7 @@
   },
   "dependencies": {
     "commander": "^2.19.0",
-    "dotenv": "^6.2.0"
+    "dotenv": "^6.2.0",
     "pg": "^7.8.2"
   },
   "devDependencies": {
