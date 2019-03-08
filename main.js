@@ -67,7 +67,7 @@ const readMigrationFileContent = async oneFileName => {
  */
 const getAllMigrationsFromFolder = async () => {
 	console.log('📄 Getting all migrations from folder...')
-	const migrationFolder = await promisify(fs.readDirSync)(path.resolve(MIGRATION_FOLDER_NAME))
+	const migrationFolder = await promisify(fs.readdir)(path.resolve(MIGRATION_FOLDER_NAME))	
 	const migrationFiles = migrationFolder.map(readMigrationFileContent)
 	return Promise.all(migrationFiles)
 }
@@ -149,4 +149,4 @@ const runMigrations = async () => {
 	}
 }
 
-module.exports = { runMigrations }
+module.exports =  runMigrations 
