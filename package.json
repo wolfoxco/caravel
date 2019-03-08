@@ -15,5 +15,7 @@
     "commander": "^2.19.0",
     "dotenv": "^6.2.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "eslint": "^5.15.1"
+  }
 }
