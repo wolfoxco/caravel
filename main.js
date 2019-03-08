@@ -147,6 +147,7 @@ const runMigrations = async () => {
 			].join(' '))
 		}
 	}
+	await client.end()
 }
 
 module.exports =  runMigrations 
