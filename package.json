@@ -1,5 +1,11 @@
 {
+  "name": "@wolfox/caravel",
+  "version": "1.0.0",
+  "main": "main.js",
+  "repository": "git@github.com:wolfoxco/caravel.git",
+  "license": "MIT",
   "dependencies": {
     "dotenv": "^6.2.0"
-  }
+  },
+  "devDependencies": {}
 }
