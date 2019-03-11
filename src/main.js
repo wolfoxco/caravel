@@ -88,7 +88,7 @@ const executeMigrations = async (migration) => {
 const runMigrations = async (configFilePath) => {
   const pgClient = await client.create(configFilePath)
   globalClient = pgClient
-  const connected = await connectToDb(pgClient)
+  const connected = await client.connect(pgClient)
   if (connected) {
     await checkIfMigrationTableExists()
     const migrationsRowsFromDB = await getAllMigrationsFromTable()
