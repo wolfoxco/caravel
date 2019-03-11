@@ -20,6 +20,7 @@
     "caravel": "bin/index.js"
   },
   "scripts": {
+    "test": "mocha",
     "migrate": "node ./bin/index.js migrate"
   },
   "dependencies": {
