@@ -1,5 +1,6 @@
 # JS Stuff
 node_modules/
+tmp/
 
 # OS Stuff
 .DS_Store
