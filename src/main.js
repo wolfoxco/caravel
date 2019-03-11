@@ -1,6 +1,6 @@
 const path = require('path')
-const helpers = require('./src/helpers')
-const client = require('./src/client')
+const helpers = require('./helpers')
+const client = require('./client')
 
 const MIGRATION_TABLE_NAME = 'caravel_migrations'
 const DEFAULT_MIGRATION_FOLDER_NAME = 'migrations'

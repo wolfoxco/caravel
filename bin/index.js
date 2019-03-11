@@ -2,7 +2,7 @@
 
 const program = require('commander')
 
-const main = require('../main.js')
+const main = require('../src/main.js')
 
 program
   .command('migrate')
