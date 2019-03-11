@@ -116,4 +116,6 @@ const runMigrations = async (configFilePath) => {
   await client.end()
 }
 
-module.exports = runMigrations
+module.exports = {
+  runMigrations,
+}
