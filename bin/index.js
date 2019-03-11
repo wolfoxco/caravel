@@ -1,8 +1,8 @@
 #! /usr/bin/env node
 
-const program = require ('commander')
+const program = require('commander')
 
-const main = require ('../main.js')
+const main = require('../main.js')
 
 program
   .command('migrate')
