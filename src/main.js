@@ -72,10 +72,21 @@ const updateMigrationTable = (newVersion) => {
 const stageMigrations = async (migrationsToExecute) => {
   if (migrationsToExecute.length === 0) {
     console.log('🙌 Database is up to date!')
+    console.log('🤝 Migrations finished successfully !')
+    return true
   } else {
     const [ currentMigration, ...nextMigrations ] = migrationsToExecute
-    await executeMigrations(currentMigration)
-    await stageMigrations(nextMigrations)
+    try {
+      await executeMigrations(currentMigration)
+      return await stageMigrations(nextMigrations)
+    } catch (error) {
+      console.error(
+        '🚫 ERROR with migration, version: ',
+        currentMigration.version,
+      )
+      console.error(error)
+      return false
+    }
   }
 }
 
@@ -97,16 +108,7 @@ const runMigrations = async (configFilePath) => {
       migrationsRowsFromDB,
       migrationsFromFS,
     )
-    try {
-      await stageMigrations(migrationsToExecute)
-      console.log('🤝 Migrations finished successfully !')
-    } catch (error) {
-      console.error(
-        '🚫 ERROR with migration, version: ',
-        currentMigration.version,
-      )
-      console.error(error)
-    }
+    await stageMigrations(migrationsToExecute)
   } else {
     console.error([
       'Unable to connect to your database.',
