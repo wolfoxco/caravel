@@ -50,7 +50,7 @@ const createClientFromDotenvEnv = () => {
 
 const create = async configFilePath => {
   return (
-    createClientFromConfigFile(configFilePath)
+    await createClientFromConfigFile(configFilePath)
     || createClientFromNakedEnv()
     || createClientFromDotenvEnv()
     || new Client()
