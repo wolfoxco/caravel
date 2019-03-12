@@ -16,7 +16,7 @@ const checkIfMigrationTableExists = async () => {
     SELECT EXISTS (
       SELECT 1
       FROM information_schema.tables
-      WHERE table_name = ${MIGRATION_TABLE_NAME}
+      WHERE table_name = '${MIGRATION_TABLE_NAME}'
     )`
   )
   const { exists } = response.rows[0]
