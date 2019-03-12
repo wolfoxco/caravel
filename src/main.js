@@ -3,29 +3,33 @@ const chalk = require('chalk')
 const helpers = require('./helpers')
 const client = require('./client')
 
-const MIGRATION_TABLE_NAME = 'caravel_migrations'
-const DEFAULT_MIGRATION_FOLDER_NAME = 'migrations'
+const MIGRATIONS_TABLE_NAME = 'caravel_migrations'
+const DEFAULT_MIGRATIONS_FOLDER_NAME = 'migrations'
 
-const { MIGRATION_FOLDER_NAME } = process.env
-const MIGRATION_FOLDER = MIGRATION_FOLDER_NAME || DEFAULT_MIGRATION_FOLDER_NAME
+const { MIGRATIONS_FOLDER_NAME } = process.env
+const MIGRATIONS_FOLDER = MIGRATIONS_FOLDER_NAME || DEFAULT_MIGRATIONS_FOLDER_NAME
 
 let globalClient
+
+const createMigrationsTable = tableName => {
+  return globalClient.query(
+    `CREATE TABLE ${tableName} (version integer PRIMARY KEY)`
+  )
+}
 
 const checkIfMigrationTableExists = async () => {
   const response = await globalClient.query(`
     SELECT EXISTS (
       SELECT 1
       FROM information_schema.tables
-      WHERE table_name = '${MIGRATION_TABLE_NAME}'
+      WHERE table_name = '${MIGRATIONS_TABLE_NAME}'
     )`
   )
   const { exists } = response.rows[0]
 
   if (!exists) {
     console.log('🔧 No migration table found, creating...')
-    await globalClient.query(
-      `CREATE TABLE ${MIGRATION_TABLE_NAME} (version integer PRIMARY KEY)`
-    )
+    await createMigrationsTable(MIGRATIONS_TABLE_NAME)
     console.log('👌 Migrations table created')
   } else {
     console.log('👌 Migration table exists')
@@ -34,7 +38,7 @@ const checkIfMigrationTableExists = async () => {
 
 const readMigrationFileContent = async oneFileName => {
   const [ versionNumber ] = oneFileName.split('-')
-  const pathName = path.resolve(MIGRATION_FOLDER, oneFileName)
+  const pathName = path.resolve(MIGRATIONS_FOLDER, oneFileName)
   const fileContent = await helpers.readFile(pathName, "utf8")
   return {
     version: parseInt(versionNumber),
@@ -44,14 +48,14 @@ const readMigrationFileContent = async oneFileName => {
 
 const getAllMigrationsFromFolder = async () => {
   console.log('📄 Getting all migrations from folder...')
-  const migrationFolder = await helpers.readdir(path.resolve(MIGRATION_FOLDER))
+  const migrationFolder = await helpers.readdir(path.resolve(MIGRATIONS_FOLDER))
   const migrationFiles = migrationFolder.map(readMigrationFileContent)
   return Promise.all(migrationFiles)
 }
 
 const getAllMigrationsFromTable = async () => {
   console.log('📈 Getting all migrations in table...')
-  const response = await globalClient.query(`SELECT * FROM ${MIGRATION_TABLE_NAME}`)
+  const response = await globalClient.query(`SELECT * FROM ${MIGRATIONS_TABLE_NAME}`)
   return response.rows
 }
 
@@ -65,7 +69,7 @@ const compareMigrations = async (migrationsRowsFromDB, migrationsFromFS) => {
 
 const updateMigrationTable = (newVersion) => {
   return globalClient.query(
-    `INSERT INTO ${MIGRATION_TABLE_NAME} (version) VALUES($1)`,
+    `INSERT INTO ${MIGRATIONS_TABLE_NAME} (version) VALUES($1)`,
     [ newVersion ]
   )
 }
