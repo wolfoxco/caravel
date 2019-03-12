@@ -102,7 +102,7 @@ const executeMigrations = async (migration) => {
 }
 
 const createClientAndConnect = async (configFilePath) => {
-  const pgClient = await client.create(configFilePath)
+  const pgClient = client.create(configFilePath)
   globalClient = pgClient
   return await client.connect(globalClient)
 }

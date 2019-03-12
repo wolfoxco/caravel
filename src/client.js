@@ -14,11 +14,11 @@ const createClientFromEnv = () => {
   }
 }
 
-const createClientFromConfigFile = async configFilePath => {
+const createClientFromConfigFile = configFilePath => {
   if (configFilePath) {
     const filePath = path.resolve(configFilePath)
-    const config = await helpers.readFile(filePath)
-    return new Client(JSON.parse(config))
+    const config = require(filePath)
+    return new Client(config)
   } else {
     return null
   }
@@ -43,9 +43,9 @@ const createClientFromDotenvEnv = () => {
   }
 }
 
-const create = async configFilePath => {
+const create = configFilePath => {
   return (
-    await createClientFromConfigFile(configFilePath)
+    createClientFromConfigFile(configFilePath)
     || createClientFromNakedEnv()
     || createClientFromDotenvEnv()
     || new Client()

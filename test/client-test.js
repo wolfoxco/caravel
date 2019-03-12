@@ -50,27 +50,27 @@ describe('The database client', function() {
     after('Deleting tmp directory', deleteTmpDirectory)
 
     it('should be able to read a config file', async function() {
-      const client = await create('./tmp/config.json')
+      const client = create('./tmp/config.json')
       testClient(client)
     })
 
     it('should be able to read a global DATABASE_URL variable', async function() {
       process.env.DATABASE_URL = generateDatabaseURL()
-      const client = await create()
+      const client = create()
       testClient(client)
       delete process.env.DATABASE_URL
     })
 
     it('should be able to read a local DATABASE_URL variable in a .env file', async function() {
       fs.writeFileSync(ENV_FILE, `DATABASE_URL = ${generateDatabaseURL()}`)
-      const client = await create()
+      const client = create()
       testClient(client)
       delete process.env.DATABASE_URL
       fs.unlinkSync(ENV_FILE)
     })
 
     it('should be able to read config from global environment', async function() {
-      const client = await create()
+      const client = create()
       const { PGUSER, PGDATABASE, PGPORT, PGHOST, PGPASSWORD, USER } = process.env
       expect(client.user).to.equal(PGUSER || USER)
       expect(client.database).to.equal(PGDATABASE || USER)
