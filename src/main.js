@@ -103,6 +103,14 @@ const createClientAndConnect = async (configFilePath) => {
   return await client.connect(globalClient)
 }
 
+const printError = error => {
+  console.error(chalk.bold.red('error: An error occured during migrate.'))
+  console.error(chalk.bold.yellow(`  ${error}`))
+  console.error()
+  console.error(chalk.bold.green('information: Some informations to help you debug.'))
+  console.error(chalk.bold.green(`  DATABASE_URL: ${globalClient.databaseURL()}`))
+}
+
 const runMigrations = async (configFilePath) => {
   try {
     const connected = await createClientAndConnect(configFilePath)
@@ -123,9 +131,7 @@ const runMigrations = async (configFilePath) => {
       ].join(' '))
     }
   } catch (error) {
-    console.error(chalk.bold.red('error: An error occured during migrate.'))
-    console.error(chalk.bold.yellow(`  ${error}`))
-    console.error(chalk.bold.yellow(`  DATABASE_URL: ${globalClient.databaseURL()}`))
+    printError(error)
   } finally {
     if (globalClient) {
       await globalClient.end()
