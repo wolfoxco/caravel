@@ -1,3 +1,4 @@
+const fs = require('fs')
 const path = require('path')
 const chalk = require('chalk')
 const helpers = require('./helpers')
@@ -46,9 +47,9 @@ const readMigrationFileContent = async oneFileName => {
   }
 }
 
-const getAllMigrationsFromFolder = async () => {
+const getAllMigrationsFromFolder = async (migrationsFolder) => {
   console.log('📄 Getting all migrations from folder...')
-  const migrationFolder = await helpers.readdir(path.resolve(MIGRATIONS_FOLDER))
+  const migrationFolder = await helpers.readdir(path.resolve(migrationsFolder || MIGRATIONS_FOLDER))
   const migrationFiles = migrationFolder.map(readMigrationFileContent)
   return Promise.all(migrationFiles)
 }
@@ -115,13 +116,13 @@ const printError = error => {
   console.error(chalk.bold.green(`  DATABASE_URL: ${globalClient.databaseURL()}`))
 }
 
-const runMigrations = async (configFilePath) => {
+const runMigrations = async (configFilePath, migrationsFolder) => {
   try {
     const connected = await createClientAndConnect(configFilePath)
     if (connected) {
       await checkIfMigrationTableExists()
       const migrationsRowsFromDB = await getAllMigrationsFromTable()
-      const migrationsFromFS = await getAllMigrationsFromFolder()
+      const migrationsFromFS = await getAllMigrationsFromFolder(migrationsFolder)
       const migrationsToExecute = await compareMigrations(
         migrationsRowsFromDB,
         migrationsFromFS,
@@ -143,6 +144,54 @@ const runMigrations = async (configFilePath) => {
   }
 }
 
+const generateUpAndDownFileNames = (timestamp, name) => {
+  const baseName = `${timestamp}-${name}`
+  const upAndDownNames = [
+    `${baseName}.up`,
+    `${baseName}.down`,
+  ]
+  const fullNames = upAndDownNames.map(elem => `${elem}.sql`)
+  return fullNames
+}
+
+const writeMigrationFile = filename => {
+  console.log(chalk.bold.green(`Creating ${filename}...`))
+  return helpers.writeFile(filename, '-- Your migration code here.')
+}
+
+const turnIntoAbsolutePath = migrationsPath => filename => {
+  return path.resolve(migrationsPath, filename)
+}
+
+const generateMigrationHelp = async (migrationsFolder, name) => {
+  const migrationsPath = path.resolve(migrationsFolder || MIGRATIONS_FOLDER)
+  try {
+    await helpers.access(migrationsPath, fs.constants.F_OK | fs.constants.W_OK)
+    const timestamp = Date.now()
+    const upAndDownFileNames = generateUpAndDownFileNames(timestamp, name)
+    const fullUpAndDownFileNames = upAndDownFileNames.map(turnIntoAbsolutePath(migrationsPath))
+    const results = fullUpAndDownFileNames.map(writeMigrationFile)
+    await Promise.all(results)
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.log(chalk.bold.green('No corresponding migration folder. Creating...'))
+      await helpers.mkdir(migrationsPath)
+      generateMigration(migrationsPath, name)
+    } else {
+      console.error(error)
+    }
+  }
+}
+
+const generateMigration = async (migrationsFolder, name) => {
+  if (name.length === 0) {
+    console.error(chalk.bold.red('You did not specified migration name. Aborting.'))
+  } else {
+    await generateMigrationHelp(migrationsFolder, name)
+  }
+}
+
 module.exports = {
   runMigrations,
+  generateMigration,
 }

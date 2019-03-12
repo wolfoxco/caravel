@@ -7,6 +7,7 @@ const main = require('../src/main.js')
 program
   .version('0.1.0')
   .option('-c, --config <path>', 'Specify connection database config file')
+  .option('-f, --folder <path>', 'Specify migrations folder path')
 
 program
   .command('migrate')
@@ -14,6 +15,14 @@ program
   .description('Run migration files in migrations folder if necessary')
   .action(async () => {
     await main.runMigrations(program.config, program.folder)
+  })
+
+program
+  .command('generate [name...]')
+  .alias('g')
+  .description('Generate correct migration in migrations folder')
+  .action(async options => {
+    await main.generateMigration(program.folder, options.join('-'))
   })
 
 if (!process.argv.slice(2).length) {

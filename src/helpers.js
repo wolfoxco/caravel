@@ -16,6 +16,12 @@ const readFile = async path => {
 
 const readdir = util.promisify(fs.readdir)
 
+const access = util.promisify(fs.access)
+
+const writeFile = util.promisify(fs.writeFile)
+
+const mkdir = util.promisify(fs.mkdir)
+
 const generateDatabaseURL = ({ user, password, host, port, database }) => {
   const passwordPart = password ? `:${password}` : ''
   return `postgres://${user}${passwordPart}@${host}:${port}/${database}`
@@ -24,5 +30,8 @@ const generateDatabaseURL = ({ user, password, host, port, database }) => {
 module.exports = {
   readFile,
   readdir,
+  access,
+  writeFile,
+  mkdir,
   generateDatabaseURL,
 }
