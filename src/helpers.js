@@ -16,7 +16,13 @@ const readFile = async path => {
 
 const readdir = util.promisify(fs.readdir)
 
+const generateDatabaseURL = ({ user, password, host, port, database }) => {
+  const passwordPart = password ? `:${password}` : ''
+  return `postgres://${user}${passwordPart}@${host}:${port}/${database}`
+}
+
 module.exports = {
   readFile,
   readdir,
+  generateDatabaseURL,
 }
