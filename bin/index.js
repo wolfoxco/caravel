@@ -12,8 +12,8 @@ program
   .command('migrate')
   .alias('m')
   .description('Run migration files in migrations folder if necessary')
-  .action(() => {
-    main.runMigrations(program.config)
+  .action(async () => {
+    await main.runMigrations(program.config, program.folder)
   })
 
 if (!process.argv.slice(2).length) {
