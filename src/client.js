@@ -14,7 +14,7 @@ const createClientFromEnv = () => {
   }
 }
 
-const createClientFromConfigFile = async (configFilePath) => {
+const createClientFromConfigFile = async configFilePath => {
   if (configFilePath) {
     const filePath = path.resolve(configFilePath)
     const config = await helpers.readFile(filePath)
@@ -52,7 +52,7 @@ const create = async configFilePath => {
   )
 }
 
-const connect = async (client) => {
+const connect = async client => {
   try {
     await client.connect()
     console.log('🎆  Connected to DB.')
