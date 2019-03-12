@@ -69,7 +69,7 @@ const compareMigrations = async (migrationsRowsFromDB, migrationsFromFS) => {
 
 const updateMigrationTable = (newVersion) => {
   return globalClient.query(
-    `INSERT INTO ${MIGRATIONS_TABLE_NAME} (version) VALUES($1)`,
+    `INSERT INTO ${MIGRATIONS_TABLE_NAME} (version) VALUES ($1)`,
     [ newVersion ]
   )
 }
