@@ -13,6 +13,7 @@ const DB_USER = 'doctor'
 const DB_HOST = 'localhost'
 const DB_PORT = 5432
 const DB_NAME = 'caravel_test'
+const LOCALHOST = 'localhost'
 
 function generateDatabaseURL() {
   return `postgres://${DB_USER}@${DB_HOST}:${DB_PORT}/${DB_NAME}`
@@ -65,8 +66,15 @@ describe('The database client', function() {
       delete process.env.DATABASE_URL
       fs.unlinkSync(ENV_FILE)
     })
-    
-    it('should be able to read config from global environment')
-    it('should crash if no config is given')
+
+    it('should be able to read config from global environment', async function() {
+      const client = await create()
+      const { PGUSER, PGDATABASE, PGPORT, PGHOST, PGPASSWORD, USER } = process.env
+      expect(client.user).to.equal(PGUSER || USER)
+      expect(client.database).to.equal(PGDATABASE || USER)
+      expect(client.port).to.equal(PGPORT || 5432)
+      expect(client.host).to.equal(PGHOST || LOCALHOST)
+      expect(client.password).to.equal(PGPASSWORD || null)
+    })
   })
 })
