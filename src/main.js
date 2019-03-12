@@ -167,11 +167,11 @@ const generateMigrationHelp = async (migrationsFolder, name) => {
   const migrationsPath = path.resolve(migrationsFolder || MIGRATIONS_FOLDER)
   try {
     await helpers.access(migrationsPath, fs.constants.F_OK | fs.constants.W_OK)
-    const timestamp = Date.now()
-    const upAndDownFileNames = generateUpAndDownFileNames(timestamp, name)
-    const fullUpAndDownFileNames = upAndDownFileNames.map(turnIntoAbsolutePath(migrationsPath))
-    const results = fullUpAndDownFileNames.map(writeMigrationFile)
-    await Promise.all(results)
+    await Promise.all(
+      generateUpAndDownFileNames(Date.now(), name)
+        .map(turnIntoAbsolutePath(migrationsPath))
+        .map(writeMigrationFile)
+    )
   } catch (error) {
     if (error.code === 'ENOENT') {
       console.log(chalk.bold.green('No corresponding migration folder. Creating...'))
