@@ -116,11 +116,14 @@ const runMigrations = async (configFilePath) => {
         'Are you sure it is up and running?',
       ].join(' '))
     }
-    await globalClient.end()
   } catch (error) {
     console.error('An error occured during migrate.')
     console.error()
     console.error(`  ${error}`)
+  } finally {
+    if (globalClient) {
+      await globalClient.end()
+    }
   }
 }
 
