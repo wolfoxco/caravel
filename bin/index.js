@@ -2,7 +2,8 @@
 
 const program = require('commander')
 
-const main = require('../src/main.js')
+const main = require('../src/main')
+const generate = require('../src/generate')
 
 program
   .version('0.1.0')
@@ -22,7 +23,7 @@ program
   .alias('g')
   .description('Generate correct migration in migrations folder')
   .action(async options => {
-    await main.generateMigration(program.folder, options.join('-'))
+    await generate.migration(program.folder, options.join('-'))
   })
 
 if (!process.argv.slice(2).length) {
