@@ -1,4 +1,5 @@
 const path = require('path')
+const chalk = require('chalk')
 const helpers = require('./helpers')
 const client = require('./client')
 
@@ -96,11 +97,15 @@ const executeMigrations = async (migration) => {
   await updateMigrationTable(migration.version)
 }
 
+const createClientAndConnect = async (configFilePath) => {
+  const pgClient = await client.create(configFilePath)
+  globalClient = pgClient
+  return await client.connect(globalClient)
+}
+
 const runMigrations = async (configFilePath) => {
   try {
-    const pgClient = await client.create(configFilePath)
-    globalClient = pgClient
-    const connected = await client.connect(globalClient)
+    const connected = await createClientAndConnect(configFilePath)
     if (connected) {
       await checkIfMigrationTableExists()
       const migrationsRowsFromDB = await getAllMigrationsFromTable()
@@ -114,12 +119,13 @@ const runMigrations = async (configFilePath) => {
       console.error([
         'Unable to connect to your database.',
         'Are you sure it is up and running?',
+        `You’re trying to connect to ${client.readDatabaseURL(globalClient)}`
       ].join(' '))
     }
   } catch (error) {
-    console.error('An error occured during migrate.')
-    console.error()
-    console.error(`  ${error}`)
+    console.error(chalk.bold.red('error: An error occured during migrate.'))
+    console.error(chalk.bold.yellow(`  ${error}`))
+    console.error(chalk.bold.yellow(`  DATABASE_URL: ${globalClient.databaseURL()}`))
   } finally {
     if (globalClient) {
       await globalClient.end()
