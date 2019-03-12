@@ -97,25 +97,31 @@ const executeMigrations = async (migration) => {
 }
 
 const runMigrations = async (configFilePath) => {
-  const pgClient = await client.create(configFilePath)
-  globalClient = pgClient
-  const connected = await client.connect(pgClient)
-  if (connected) {
-    await checkIfMigrationTableExists()
-    const migrationsRowsFromDB = await getAllMigrationsFromTable()
-    const migrationsFromFS = await getAllMigrationsFromFolder()
-    const migrationsToExecute = await compareMigrations(
-      migrationsRowsFromDB,
-      migrationsFromFS,
-    )
-    await stageMigrations(migrationsToExecute)
-  } else {
-    console.error([
-      'Unable to connect to your database.',
-      'Are you sure it is up and running?',
-    ].join(' '))
+  try {
+    const pgClient = await client.create(configFilePath)
+    globalClient = pgClient
+    const connected = await client.connect(globalClient)
+    if (connected) {
+      await checkIfMigrationTableExists()
+      const migrationsRowsFromDB = await getAllMigrationsFromTable()
+      const migrationsFromFS = await getAllMigrationsFromFolder()
+      const migrationsToExecute = await compareMigrations(
+        migrationsRowsFromDB,
+        migrationsFromFS,
+      )
+      await stageMigrations(migrationsToExecute)
+    } else {
+      console.error([
+        'Unable to connect to your database.',
+        'Are you sure it is up and running?',
+      ].join(' '))
+    }
+    await globalClient.end()
+  } catch (error) {
+    console.error('An error occured during migrate.')
+    console.error()
+    console.error(`  ${error}`)
   }
-  await client.end()
 }
 
 module.exports = {

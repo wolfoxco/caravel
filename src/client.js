@@ -15,16 +15,11 @@ const createClientFromEnv = () => {
 }
 
 const createClientFromConfigFile = async (configFilePath) => {
-  try {
-    if (configFilePath) {
-      const filePath = path.resolve(configFilePath)
-      const config = await helpers.readFile(filePath)
-      return new Client(JSON.parse(config))
-    } else {
-      return null
-    }
-  } catch (error) {
-    console.error(error)
+  if (configFilePath) {
+    const filePath = path.resolve(configFilePath)
+    const config = await helpers.readFile(filePath)
+    return new Client(JSON.parse(config))
+  } else {
     return null
   }
 }
