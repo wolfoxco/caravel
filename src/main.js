@@ -41,11 +41,21 @@ const readMigrationFileContent = async oneFileName => {
   }
 }
 
+const isUp = filename => {
+  const parts = filename.split('.').reverse()
+  return (
+    parts.length >= 3
+    && parts[0] === 'sql'
+    && parts[1] === 'up'
+  )
+}
+
 const getAllMigrationsFromFolder = async (migrationsFolder) => {
   console.log('📄 Getting all migrations from folder...')
-  const migrationFolder = await helpers.readdir(path.resolve(migrationsFolder || MIGRATIONS_FOLDER))
-  const migrationFiles = migrationFolder.map(readMigrationFileContent)
-  return Promise.all(migrationFiles)
+  const migrationsFileNames = await helpers.readdir(path.resolve(migrationsFolder || MIGRATIONS_FOLDER))
+  const filteredMigrationsFileNames = migrationsFileNames.filter(isUp)
+  const migrationsFiles = filteredMigrationsFileNames.map(readMigrationFileContent)
+  return Promise.all(migrationsFiles)
 }
 
 const getAllMigrationsFromTable = async () => {
