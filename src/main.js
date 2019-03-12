@@ -163,31 +163,34 @@ const turnIntoAbsolutePath = migrationsPath => filename => {
   return path.resolve(migrationsPath, filename)
 }
 
-const generateMigrationHelp = async (migrationsFolder, name) => {
-  const migrationsPath = path.resolve(migrationsFolder || MIGRATIONS_FOLDER)
-  try {
-    await helpers.access(migrationsPath, fs.constants.F_OK | fs.constants.W_OK)
-    await Promise.all(
-      generateUpAndDownFileNames(Date.now(), name)
-        .map(turnIntoAbsolutePath(migrationsPath))
-        .map(writeMigrationFile)
-    )
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      console.log(chalk.bold.green('No corresponding migration folder. Creating...'))
-      await helpers.mkdir(migrationsPath)
-      generateMigration(migrationsPath, name)
-    } else {
-      console.error(error)
-    }
+const handleAccessError = migrationsPath => error => {
+  if (error.code === 'ENOENT') {
+    console.log(chalk.bold.green('No corresponding migration folder. Creating...'))
+    return helpers.mkdir(migrationsPath)
+  } else {
+    throw error
   }
 }
 
-const generateMigration = async (migrationsFolder, name) => {
+const generateFiles = (migrationsPath, name) => () => Promise.all(
+  generateUpAndDownFileNames(Date.now(), name)
+    .map(turnIntoAbsolutePath(migrationsPath))
+    .map(writeMigrationFile)
+)
+
+const createMigrationsFolderAndFiles = (migrationsPath, name) => {
+  return helpers.access(migrationsPath, fs.constants.F_OK | fs.constants.W_OK)
+    .catch(handleAccessError(migrationsPath))
+    .then(generateFiles(migrationsPath, name))
+    .catch(error => console.error(error))
+}
+
+const generateMigration = (migrationsFolder, name) => {
   if (name.length === 0) {
     console.error(chalk.bold.red('You did not specified migration name. Aborting.'))
   } else {
-    await generateMigrationHelp(migrationsFolder, name)
+    const migrationsPath = path.resolve(migrationsFolder || MIGRATIONS_FOLDER)
+    return createMigrationsFolderAndFiles(migrationsPath, name)
   }
 }
 
