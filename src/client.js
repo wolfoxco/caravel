@@ -63,6 +63,9 @@ const connect = async client => {
   }
 }
 
+Client.prototype.databaseURL = Client.prototype.databaseURL || function() {
+  return helpers.generateDatabaseURL(this)
+}
 
 module.exports = {
   create,
