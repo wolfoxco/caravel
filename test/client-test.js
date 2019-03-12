@@ -1,7 +1,9 @@
 const path = require('path')
 const fs = require('fs')
-const should = require('chai').should() // eslint-disable-line
-const expect = require('chai').expect
+const { expect } = require('chai')
+
+// Add should to every object to do proper BDD.
+require('chai').should()
 
 const { create } = require('../src/client')
 
