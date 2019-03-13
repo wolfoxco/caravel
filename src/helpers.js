@@ -43,6 +43,10 @@ const writeFile = util.promisify(fs.writeFile)
 
 const mkdir = util.promisify(fs.mkdir)
 
+const unlink = util.promisify(fs.unlink)
+
+const rmdir = util.promisify(fs.rmdir)
+
 const generateDatabaseURL = ({ user, password, host, port, database }) => {
   const passwordPart = password ? `:${password}` : ''
   return `postgres://${user}${passwordPart}@${host}:${port}/${database}`
@@ -55,5 +59,7 @@ module.exports = {
   access,
   writeFile,
   mkdir,
+  unlink,
+  rmdir,
   generateDatabaseURL,
 }
