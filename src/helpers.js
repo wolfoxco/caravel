@@ -1,6 +1,16 @@
 const fs = require('fs')
 const util = require('util')
 
+const generateUpAndDownFileNames = (timestamp, name) => {
+  const baseName = `${timestamp}-${name}`
+  const upAndDownNames = [
+    `${baseName}.up`,
+    `${baseName}.down`,
+  ]
+  const fullNames = upAndDownNames.map(elem => `${elem}.sql`)
+  return fullNames
+}
+
 const readFile = async path => {
   try {
     return await util.promisify(fs.readFile)(path)
@@ -39,6 +49,7 @@ const generateDatabaseURL = ({ user, password, host, port, database }) => {
 }
 
 module.exports = {
+  generateUpAndDownFileNames,
   readFile,
   readdir,
   access,

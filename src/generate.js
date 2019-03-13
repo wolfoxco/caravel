@@ -4,16 +4,6 @@ const chalk = require('chalk')
 const helpers = require('./helpers')
 const { MIGRATIONS_FOLDER } = require('./constants')
 
-const generateUpAndDownFileNames = (timestamp, name) => {
-  const baseName = `${timestamp}-${name}`
-  const upAndDownNames = [
-    `${baseName}.up`,
-    `${baseName}.down`,
-  ]
-  const fullNames = upAndDownNames.map(elem => `${elem}.sql`)
-  return fullNames
-}
-
 const writeMigrationFile = filename => {
   console.log(chalk.bold.green(`Creating ${filename}...`))
   return helpers.writeFile(filename, '-- Your migration code here.')
@@ -33,7 +23,7 @@ const handleAccessError = migrationsPath => error => {
 }
 
 const generateFiles = (migrationsPath, name) => () => Promise.all(
-  generateUpAndDownFileNames(Date.now(), name)
+  helpers.generateUpAndDownFileNames(Date.now(), name)
     .map(turnIntoAbsolutePath(migrationsPath))
     .map(writeMigrationFile)
 )
