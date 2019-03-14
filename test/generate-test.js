@@ -100,5 +100,14 @@ describe('The migrations generation', function() {
       ))
       await helpers.rmdir(CUSTOM_PATH)
     })
+
+    it('should not generate files if no filename given', async function() {
+      try {
+        await migration(null, '')
+        await checkFolderExists(MIGRATIONS_PATH)
+      } catch (error) {
+        error.code.should.equal('ENOENT')
+      }
+    })
   })
 })
