@@ -8,9 +8,13 @@ require('chai').should()
 const generate = require('../src/generate')
 const helpers = require('../src/helpers')
 
-const MIGRATIONS_PATH = path.resolve('./migrations')
-const CUSTOM_PATH = path.resolve('./custom-migrations')
+const MIGRATIONS_PATH = path.resolve('db/migrations')
+const CUSTOM_PATH = path.resolve('custom-migrations')
 const NAME = 'create-user-table'
+
+function migration(path, name) {
+  return generate.migration(path, name, { verbose: false })
+}
 
 function deleteMigrationsDirectory() {
   try {
@@ -20,6 +24,7 @@ function deleteMigrationsDirectory() {
       fs.unlinkSync(path.resolve(MIGRATIONS_PATH, filename))
     )
     fs.rmdirSync(MIGRATIONS_PATH)
+    fs.rmdirSync(path.resolve(MIGRATIONS_PATH, '..'))
   } catch (error) {
     if (error.code !== 'ENOENT') {
       console.error(error)
@@ -40,7 +45,7 @@ function checkFolderExists(path) {
 }
 
 async function generateMigrationsFolderAndFiles(migrationsPath, filenames) {
-  await helpers.mkdir(migrationsPath)
+  await helpers.mkdir(migrationsPath, { recursive: true })
   if (filenames) {
     return Promise.all(
       helpers
@@ -64,7 +69,7 @@ describe('The migrations generation', function() {
     afterEach('Deleting default migrations directory', deleteMigrationsDirectory)
 
     it('should generate two files with a timestamp in default folder and generating it', async function() {
-      await generate.migration(null, NAME)
+      await migration(null, NAME)
       await checkFolderExists(MIGRATIONS_PATH)
       const dirContent = await helpers.readdir(MIGRATIONS_PATH)
       expect(dirContent.length).to.equal(2)
@@ -73,7 +78,7 @@ describe('The migrations generation', function() {
 
     it('should generate two files with a timestamp in default folder already existing', async function() {
       await generateMigrationsFolderAndFiles(MIGRATIONS_PATH)
-      await generate.migration(null, NAME)
+      await migration(null, NAME)
       await checkFolderExists(MIGRATIONS_PATH)
       const dirContent = await helpers.readdir(MIGRATIONS_PATH)
       expect(dirContent.length).to.equal(2)
@@ -83,14 +88,14 @@ describe('The migrations generation', function() {
     it('should generate two files with a timestamp without deleting old files', async function() {
       const OTHER_FILENAMES = [ 'create-posts-table' ]
       await generateMigrationsFolderAndFiles(MIGRATIONS_PATH, OTHER_FILENAMES)
-      await generate.migration(null, NAME)
+      await migration(null, NAME)
       const dirContent = await helpers.readdir(MIGRATIONS_PATH)
       expect(dirContent.length).to.equal(4)
       checkHowMuchFileGenerated(dirContent, NAME)
     })
 
     it('should generate two files with a timestamp in a custom folder', async function() {
-      await generate.migration(CUSTOM_PATH, NAME)
+      await migration(CUSTOM_PATH, NAME)
       await checkFolderExists(CUSTOM_PATH)
       const dirContent = await helpers.readdir(CUSTOM_PATH)
       expect(dirContent.length).to.equal(2)
