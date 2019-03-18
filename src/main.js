@@ -2,18 +2,13 @@ const path = require('path')
 const chalk = require('chalk')
 const helpers = require('./helpers')
 const client = require('./client')
-
-const MIGRATIONS_TABLE_NAME = 'caravel_migrations'
-const DEFAULT_MIGRATIONS_FOLDER_NAME = 'migrations'
-
-const { MIGRATIONS_FOLDER_NAME } = process.env
-const MIGRATIONS_FOLDER = MIGRATIONS_FOLDER_NAME || DEFAULT_MIGRATIONS_FOLDER_NAME
+const { MIGRATIONS_TABLE_NAME, MIGRATIONS_FOLDER } = require('./constants')
 
 let globalClient
 
 const createMigrationsTable = tableName => {
   return globalClient.query(
-    `CREATE TABLE ${tableName} (version varchar PRIMARY KEY)`
+    `CREATE TABLE ${tableName} (version text PRIMARY KEY)`
   )
 }
 
@@ -46,11 +41,21 @@ const readMigrationFileContent = async oneFileName => {
   }
 }
 
-const getAllMigrationsFromFolder = async () => {
+const isUp = filename => {
+  const parts = filename.split('.').reverse()
+  return (
+    parts.length >= 3
+    && parts[0] === 'sql'
+    && parts[1] === 'up'
+  )
+}
+
+const getAllMigrationsFromFolder = async (migrationsFolder) => {
   console.log('📄 Getting all migrations from folder...')
-  const migrationFolder = await helpers.readdir(path.resolve(MIGRATIONS_FOLDER))
-  const migrationFiles = migrationFolder.map(readMigrationFileContent)
-  return Promise.all(migrationFiles)
+  const migrationsFileNames = await helpers.readdir(path.resolve(migrationsFolder || MIGRATIONS_FOLDER))
+  const filteredMigrationsFileNames = migrationsFileNames.filter(isUp)
+  const migrationsFiles = filteredMigrationsFileNames.map(readMigrationFileContent)
+  return Promise.all(migrationsFiles)
 }
 
 const getAllMigrationsFromTable = async () => {
@@ -115,13 +120,13 @@ const printError = error => {
   console.error(chalk.bold.green(`  DATABASE_URL: ${globalClient.databaseURL()}`))
 }
 
-const runMigrations = async (configFilePath) => {
+const runMigrations = async (configFilePath, migrationsFolder) => {
   try {
     const connected = await createClientAndConnect(configFilePath)
     if (connected) {
       await checkIfMigrationTableExists()
       const migrationsRowsFromDB = await getAllMigrationsFromTable()
-      const migrationsFromFS = await getAllMigrationsFromFolder()
+      const migrationsFromFS = await getAllMigrationsFromFolder(migrationsFolder)
       const migrationsToExecute = await compareMigrations(
         migrationsRowsFromDB,
         migrationsFromFS,
