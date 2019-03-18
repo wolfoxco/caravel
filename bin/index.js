@@ -2,7 +2,7 @@
 
 const program = require('commander')
 
-const main = require('../src/main')
+const migrations = require('../src/migrations')
 const generate = require('../src/generate')
 
 program
@@ -15,7 +15,7 @@ program
   .alias('m')
   .description('Run migration files in migrations folder if necessary')
   .action(async () => {
-    await main.runMigrations(program.config, program.folder)
+    await migrations.run(program.config, program.folder)
   })
 
 program
@@ -24,6 +24,19 @@ program
   .description('Generate correct migration in migrations folder')
   .action(async options => {
     await generate.migration(program.folder, options.join('-'))
+  })
+
+program
+  .command('down [howMuch]')
+  .alias('d')
+  .description('Invert the last final(s) migration(s)')
+  .action(async options => {
+    const result = parseInt(options || 1)
+    if (isNaN(result)) {
+      console.log('Enter a valid number.')
+    } else {
+      await migrations.invert(program.config, program.folder, result)
+    }
   })
 
 if (!process.argv.slice(2).length) {
