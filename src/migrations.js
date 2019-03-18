@@ -75,11 +75,30 @@ const compareMigrations = async (migrationsRowsFromDB, migrationsFromFS) => {
   return migrationsToExecute
 }
 
-const updateMigrationTable = (newVersion) => {
-  return globalClient.query(
+const executeMigration = async ({ sql, version, filename }) => {
+  await globalClient.query('BEGIN')
+  await globalClient.query(sql)
+  await globalClient.query(
     `INSERT INTO ${MIGRATIONS_TABLE_NAME} (version) VALUES ($1)`,
-    [ newVersion ]
+    [ version ]
   )
+  await globalClient.query('END')
+  console.log(`🚀 SUCCESS with migration ${filename}`)
+}
+
+const invertMigration = async (migration, lastMigration) => {
+  if (migration) {
+    const { sql, version } = migration
+    await globalClient.query('BEGIN')
+    await globalClient.query(sql)
+    await globalClient.query(
+      `DELETE FROM ${MIGRATIONS_TABLE_NAME} WHERE version = $1`,
+      [ version ]
+    )
+    await globalClient.query('END')
+  } else {
+    throw new Error(`Migration ${lastMigration.version} do not have a down file.`)
+  }
 }
 
 const stageMigrations = async (migrationsToExecute) => {
@@ -90,23 +109,14 @@ const stageMigrations = async (migrationsToExecute) => {
   } else {
     const [ currentMigration, ...nextMigrations ] = migrationsToExecute
     try {
-      await executeMigrations(currentMigration)
+      await executeMigration(currentMigration)
       return await stageMigrations(nextMigrations)
     } catch (error) {
-      console.error(
-        '🚫 ERROR with migration, version: ',
-        currentMigration.version,
-      )
+      console.error(`🚫 ERROR with migration ${currentMigration.filename}`)
       console.error(error)
       return false
     }
   }
-}
-
-const executeMigrations = async ({ sql, version, filename }) => {
-  await globalClient.query(sql)
-  console.log(`🚀 SUCCESS with migration ${filename}`)
-  await updateMigrationTable(version)
 }
 
 const createClientAndConnect = async (configFilePath) => {
@@ -123,31 +133,21 @@ const printError = error => {
   console.error(chalk.bold.green(`  DATABASE_URL: ${globalClient.databaseURL()}`))
 }
 
-const run = async (configFilePath, migrationsFolder) => {
-  try {
-    const connected = await createClientAndConnect(configFilePath)
-    if (connected) {
-      await checkIfMigrationTableExists()
-      const migrationsRowsFromDB = await getAllMigrationsFromTable()
-      const [ migrationsFromFS ] = await getAllMigrationsFromFolder(migrationsFolder)
-      const migrationsToExecute = await compareMigrations(
-        migrationsRowsFromDB,
-        migrationsFromFS,
-      )
-      await stageMigrations(migrationsToExecute)
-    } else {
-      console.error([
-        'Unable to connect to your database.',
-        'Are you sure it is up and running?',
-        `You’re trying to connect to ${globalClient.databaseURL()}`
-      ].join(' '))
-    }
-  } catch (error) {
-    printError(error)
-  } finally {
-    if (globalClient) {
-      await globalClient.end()
-    }
+const invertOneByOne = async (numberToInvert, migrationsRows, downMigrationsFromFS) => {
+  if (numberToInvert <= 1) {
+    return 'Reverting migrations made!'
+  } else {
+    const lastMigration = migrationsRows[0]
+    const migration = downMigrationsFromFS.find(migration => {
+      return migration.version === lastMigration.version
+    })
+    await invertMigration(migration, lastMigration)
+    console.log(`Success reverting the ${migration.filename} migration.`)
+    return invertOneByOne(
+      numberToInvert - 1,
+      migrationsRows.splice(1),
+      downMigrationsFromFS
+    )
   }
 }
 
@@ -175,37 +175,15 @@ const connectAndSetupEnvironment = async (configFilePath, migrationsFolder, appl
   }
 }
 
-const invertMigration = async (migration, lastMigration) => {
-  if (migration) {
-    const { sql, version } = migration
-    await globalClient.query('BEGIN')
-    await globalClient.query(sql)
-    await globalClient.query(
-      `DELETE FROM ${MIGRATIONS_TABLE_NAME} WHERE version = $1`,
-      [ version ]
+const run = async (configFilePath, migrationsFolder) => {
+  const applier = async (migrationsRowsFromDB, upAndDownMigrationsFromFS) => {
+    const migrationsToExecute = await compareMigrations(
+      migrationsRowsFromDB,
+      upAndDownMigrationsFromFS[0],
     )
-    await globalClient.query('END')
-  } else {
-    throw new Error(`Migration ${lastMigration.version} do not have a down file.`)
+    await stageMigrations(migrationsToExecute)
   }
-}
-
-const invertOneByOne = async (numberToInvert, migrationsRows, downMigrationsFromFS) => {
-  if (numberToInvert <= 1) {
-    return 'Reverting migrations made!'
-  } else {
-    const lastMigration = migrationsRows[0]
-    const migration = downMigrationsFromFS.find(migration => {
-      return migration.version === lastMigration.version
-    })
-    await invertMigration(migration, lastMigration)
-    console.log(`Success reverting the ${migration.filename} migration.`)
-    return invertOneByOne(
-      numberToInvert - 1,
-      migrationsRows.splice(1),
-      downMigrationsFromFS
-    )
-  }
+  connectAndSetupEnvironment(configFilePath, migrationsFolder, applier)
 }
 
 const invert = (configFilePath, migrationsFolder, numberToInvert) => {
