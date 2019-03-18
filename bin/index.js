@@ -5,8 +5,22 @@ const program = require('commander')
 const migrations = require('../src/migrations')
 const generate = require('../src/generate')
 
+const helpText = [
+  'Caravel helps dealing with PostgreSQL database migration. It focuses around',
+  'three main features: migration managing with up and down, and generating',
+  'migration up and down files.',
+  '',
+  'Caravel is extremely easy to use, because it simply uses bare, simple SQL.',
+  'Caravel deals exclusively with SQL files, written in pure SQL, in a migration',
+  'folder. By using caravel generate, you can generate [timestamp]-filename.up.sql',
+  'and [timestamp]-filename.down.sql. These files need to be filled with your queries',
+  'like \'CREATE TABLE users (fields);\' and \'DROP TABLE users;\', and then run',
+  'caravel migrate to get everyting up and running!'
+].join('\n')
+
 program
-  .version('0.1.0')
+  .version('0.1.2')
+  .description(helpText)
   .option('-c, --config <path>', 'Specify connection database config file')
   .option('-f, --folder <path>', 'Specify migrations folder path')
 
