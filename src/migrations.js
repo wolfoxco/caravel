@@ -2,34 +2,10 @@ const path = require('path')
 const chalk = require('chalk')
 const helpers = require('./helpers')
 const client = require('./client')
+const queries = require('./queries')
 const { MIGRATIONS_TABLE_NAME, MIGRATIONS_FOLDER } = require('./constants')
 
 let globalClient
-
-const createMigrationsTable = tableName => {
-  return globalClient.query(
-    `CREATE TABLE ${tableName} (version text PRIMARY KEY)`
-  )
-}
-
-const checkIfMigrationTableExists = async () => {
-  const response = await globalClient.query(`
-    SELECT EXISTS (
-      SELECT 1
-      FROM information_schema.tables
-      WHERE table_name = '${MIGRATIONS_TABLE_NAME}'
-    )`
-  )
-  const { exists } = response.rows[0]
-
-  if (!exists) {
-    console.log('🔧 No migration table found, creating...')
-    await createMigrationsTable(MIGRATIONS_TABLE_NAME)
-    console.log('👌 Migrations table created')
-  } else {
-    console.log('👌 Migration table exists')
-  }
-}
 
 const readMigrationFileContent = async oneFileName => {
   const [ versionNumber ] = oneFileName.split('-')
@@ -59,12 +35,6 @@ const getAllMigrationsFromFolder = async (migrationsFolder) => {
   const upMigrationsFiles = Promise.all(filteredUpMigrationsFileNames.map(readMigrationFileContent))
   const downMigrationsFiles = Promise.all(filteredDownMigrationsFileNames.map(readMigrationFileContent))
   return Promise.all([ upMigrationsFiles, downMigrationsFiles ])
-}
-
-const getAllMigrationsFromTable = async () => {
-  console.log('📈 Getting all migrations in table...')
-  const response = await globalClient.query(`SELECT * FROM ${MIGRATIONS_TABLE_NAME} ORDER BY version`)
-  return response.rows
 }
 
 const compareMigrations = async (migrationsRowsFromDB, migrationsFromFS) => {
@@ -134,8 +104,9 @@ const printError = error => {
 }
 
 const invertOneByOne = async (numberToInvert, migrationsRows, downMigrationsFromFS) => {
-  if (numberToInvert <= 1) {
-    return 'Reverting migrations made!'
+  if (numberToInvert <= 0 || migrationsRows.length === 0) {
+    console.log('Reverting migrations done.')
+    console.log('Reverting finished successfully.')
   } else {
     const lastMigration = migrationsRows[0]
     const migration = downMigrationsFromFS.find(migration => {
@@ -155,8 +126,8 @@ const connectAndSetupEnvironment = async (configFilePath, migrationsFolder, appl
   try {
     const connected = await createClientAndConnect(configFilePath)
     if (connected) {
-      await checkIfMigrationTableExists()
-      const migrationsRowsFromDB = await getAllMigrationsFromTable()
+      await queries.checkIfMigrationTableExists(globalClient, MIGRATIONS_TABLE_NAME)
+      const migrationsRowsFromDB = await queries.getAllMigrationsFromTable(globalClient, MIGRATIONS_TABLE_NAME)
       const migrationsFromFS = await getAllMigrationsFromFolder(migrationsFolder)
       await apply(migrationsRowsFromDB, migrationsFromFS)
     } else {
