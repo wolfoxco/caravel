@@ -6,12 +6,12 @@ Caravel manages PostgreSQL migration files smartly and efficiently.
 
 ```bash
 # Yarn users
-yarn add @wolfoxco/caravel
+yarn add @wolfox/caravel
 ```
 
 ```bash
 # NPM users
-npm install --save @wolfoxco/caravel
+npm install --save @wolfox/caravel
 ```
 
 ## Requirements

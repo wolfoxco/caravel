@@ -11,9 +11,9 @@ const generateUpAndDownFileNames = (timestamp, name) => {
   return fullNames
 }
 
-const readFile = async path => {
+const readFile = async (path, options) => {
   try {
-    return await util.promisify(fs.readFile)(path)
+    return await util.promisify(fs.readFile)(path, options)
   } catch (error) {
     if (error.code === 'ENOENT') {
       const newError = `${path} does not exists.`

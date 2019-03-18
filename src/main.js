@@ -8,7 +8,7 @@ let globalClient
 
 const createMigrationsTable = tableName => {
   return globalClient.query(
-    `CREATE TABLE ${tableName} (version integer PRIMARY KEY)`
+    `CREATE TABLE ${tableName} (version text PRIMARY KEY)`
   )
 }
 
@@ -36,7 +36,7 @@ const readMigrationFileContent = async oneFileName => {
   const pathName = path.resolve(MIGRATIONS_FOLDER, oneFileName)
   const fileContent = await helpers.readFile(pathName, "utf8")
   return {
-    version: parseInt(versionNumber),
+    version: versionNumber,
     sql: fileContent,
   }
 }
