@@ -56,7 +56,7 @@ const executeMigration = async ({ sql, version, filename }) => {
   console.log(`🚀 SUCCESS with migration ${filename}`)
 }
 
-const invertMigration = async (migration, lastMigration) => {
+const revertMigration = async (migration, lastMigration) => {
   if (migration) {
     const { sql, version } = migration
     await globalClient.query('BEGIN')
@@ -103,7 +103,7 @@ const printError = error => {
   console.error(chalk.bold.green(`  DATABASE_URL: ${globalClient.databaseURL()}`))
 }
 
-const invertOneByOne = async (numberToInvert, migrationsRows, downMigrationsFromFS) => {
+const revertOneByOne = async (numberToInvert, migrationsRows, downMigrationsFromFS) => {
   if (numberToInvert <= 0 || migrationsRows.length === 0) {
     console.log('Reverting migrations done.')
     console.log('Reverting finished successfully.')
@@ -112,9 +112,9 @@ const invertOneByOne = async (numberToInvert, migrationsRows, downMigrationsFrom
     const migration = downMigrationsFromFS.find(migration => {
       return migration.version === lastMigration.version
     })
-    await invertMigration(migration, lastMigration)
+    await revertMigration(migration, lastMigration)
     console.log(`Success reverting the ${migration.filename} migration.`)
-    return invertOneByOne(
+    return revertOneByOne(
       numberToInvert - 1,
       migrationsRows.splice(1),
       downMigrationsFromFS
@@ -146,7 +146,7 @@ const connectAndSetupEnvironment = async (configFilePath, migrationsFolder, appl
   }
 }
 
-const run = async (configFilePath, migrationsFolder) => {
+const run = (configFilePath, migrationsFolder) => {
   const applier = async (migrationsRowsFromDB, upAndDownMigrationsFromFS) => {
     const migrationsToExecute = await compareMigrations(
       migrationsRowsFromDB,
@@ -154,16 +154,16 @@ const run = async (configFilePath, migrationsFolder) => {
     )
     await stageMigrations(migrationsToExecute)
   }
-  connectAndSetupEnvironment(configFilePath, migrationsFolder, applier)
+  return connectAndSetupEnvironment(configFilePath, migrationsFolder, applier)
 }
 
-const invert = (configFilePath, migrationsFolder, numberToInvert) => {
+const revert = (configFilePath, migrationsFolder, numberToInvert) => {
   const applier = (migrationsRowsFromDB, upAndDownMigrationsFromFS) => {
     if (migrationsRowsFromDB.length === 0) {
       return Promise.reject('You don’t have any migration made.')
     } else {
       const migrationsRows = migrationsRowsFromDB.reverse()
-      return invertOneByOne(numberToInvert, migrationsRows, upAndDownMigrationsFromFS[1])
+      return revertOneByOne(numberToInvert, migrationsRows, upAndDownMigrationsFromFS[1])
     }
   }
   return connectAndSetupEnvironment(configFilePath, migrationsFolder, applier)
@@ -171,5 +171,5 @@ const invert = (configFilePath, migrationsFolder, numberToInvert) => {
 
 module.exports = {
   run,
-  invert,
+  revert,
 }

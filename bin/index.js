@@ -41,15 +41,15 @@ program
   })
 
 program
-  .command('down [howMuch]')
-  .alias('d')
+  .command('revert [howMuch]')
+  .alias('r')
   .description('Invert the last final(s) migration(s)')
   .action(async options => {
     const result = parseInt(options || 1)
     if (isNaN(result)) {
       console.log('Enter a valid number.')
     } else {
-      await migrations.invert(program.config, program.folder, result)
+      await migrations.revert(program.config, program.folder, result)
     }
   })
 
