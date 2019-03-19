@@ -4,6 +4,7 @@ const { Client } = require('pg')
 const dotenv = require('dotenv')
 
 const createClientFromEnv = () => {
+  dotenv.config()
   const { DATABASE_URL } = process.env
   if (DATABASE_URL) {
     return new Client({
@@ -24,30 +25,10 @@ const createClientFromConfigFile = configFilePath => {
   }
 }
 
-const createClientFromNakedEnv = () => {
-  const nakedClient = createClientFromEnv()
-  if (nakedClient) {
-    return nakedClient
-  } else {
-    return null
-  }
-}
-
-const createClientFromDotenvEnv = () => {
-  dotenv.config()
-  const dotEnvClient = createClientFromEnv()
-  if (dotEnvClient) {
-    return dotEnvClient
-  } else {
-    return null
-  }
-}
-
 const create = configFilePath => {
   return (
     createClientFromConfigFile(configFilePath)
-    || createClientFromNakedEnv()
-    || createClientFromDotenvEnv()
+    || createClientFromEnv()
     || new Client()
   )
 }
