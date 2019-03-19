@@ -158,15 +158,19 @@ const run = (configFilePath, migrationsFolder) => {
 }
 
 const revert = (configFilePath, migrationsFolder, numberToInvert) => {
-  const applier = (migrationsRowsFromDB, upAndDownMigrationsFromFS) => {
-    if (migrationsRowsFromDB.length === 0) {
-      return Promise.reject('You don’t have any migration made.')
-    } else {
-      const migrationsRows = migrationsRowsFromDB.reverse()
-      return revertOneByOne(numberToInvert, migrationsRows, upAndDownMigrationsFromFS[1])
+  if (process.env.NODE_ENV !== 'production') {
+    const applier = (migrationsRowsFromDB, upAndDownMigrationsFromFS) => {
+      if (migrationsRowsFromDB.length === 0) {
+        return Promise.reject('You don’t have any migration made.')
+      } else {
+        const migrationsRows = migrationsRowsFromDB.reverse()
+        return revertOneByOne(numberToInvert, migrationsRows, upAndDownMigrationsFromFS[1])
+      }
     }
+    return connectAndSetupEnvironment(configFilePath, migrationsFolder, applier)
+  } else {
+    return false
   }
-  return connectAndSetupEnvironment(configFilePath, migrationsFolder, applier)
 }
 
 module.exports = {
