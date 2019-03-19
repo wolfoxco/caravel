@@ -1,10 +1,10 @@
+require('dotenv').config()
+
 const helpers = require('./helpers')
 const path = require('path')
 const { Client } = require('pg')
-const dotenv = require('dotenv')
 
 const createClientFromEnv = () => {
-  dotenv.config()
   const { DATABASE_URL } = process.env
   if (DATABASE_URL) {
     return new Client({

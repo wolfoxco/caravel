@@ -1,5 +1,7 @@
 #! /usr/bin/env node
 
+require('dotenv').config()
+
 const program = require('commander')
 
 const migrations = require('../src/migrations')
