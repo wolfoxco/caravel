@@ -1,6 +1,6 @@
 {
   "name": "@wolfox/caravel",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "src/entrypoint.js",
   "description": "Smart, simple and efficient way to manage PostgreSQL migration files.",
   "repository": "git@github.com:wolfoxco/caravel.git",
