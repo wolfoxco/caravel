@@ -47,10 +47,12 @@ const migration = (migrationsFolder, name, options = { verbose: true }) => {
   if (name.length === 0) {
     if (options.verbose) {
       console.error(chalk.bold.red('You did not specified migration name. Aborting.'))
+      return false
     }
+    return false
   } else {
     const migrationsPath = path.resolve(migrationsFolder || MIGRATIONS_FOLDER)
-    return createMigrationsFolderAndFiles(migrationsPath, name, options)
+    return createMigrationsFolderAndFiles(migrationsPath, name.replace(' ', '-'), options)
   }
 }
 
